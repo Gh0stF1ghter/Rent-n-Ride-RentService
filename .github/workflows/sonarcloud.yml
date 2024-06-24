@@ -1,0 +1,52 @@
+name: .NET with SonarCloud
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Test
+      run: dotnet test --no-build --verbosity normal --configuration Release
+
+  analyze:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Sonar Scan
+      uses: highbyte/sonarscan-dotnet@v2.3.0
+      with:
+        sonarProjectKey: ${{ vars.SONARPROJECTKEY }}
+        sonarProjectName: ${{ vars.SONARPROJECTNAME }}
+        sonarOrganization: ${{ vars.SONARORGANIZATION }}
+        dotnetBuildArguments: --configuration Release
+        dotnetTestArguments: --no-build --configuration Release --verbosity normal --logger trx --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+        sonarBeginArguments: /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" -d:sonar.cs.vstest.reportsPaths="**/TestResults/*.trx" /d:sonar.coverage.exclusions="${{env.EXCLUDE_FROM_COVERAGE}}" /d:sonar.exclusions="${{env.EXCLUDE_FROM_SONAR}}" 
+    env: 
+        EXCLUDE_FROM_COVERAGE: "**/Program.cs, **/Extensions/*, **/Exceptions/**, **/Context/*, **/Migrations/*, **/DI/*, **/Entities/*, **/Validators/*, **/Enums/**/*, **/Repositories/**, **/MappingConfigurations/*, **/ViewModels/**, **/Controllers/*"
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        EXCLUDE_FROM_SONAR: "**/Migrations/*"
