@@ -1,7 +1,5 @@
 using Mapster;
 using Microsoft.Extensions.Caching.Distributed;
-using Rent.BusinessLogic.Exceptions;
-using Rent.BusinessLogic.Exceptions.ExceptionMessages;
 using Rent.BusinessLogic.Extensions;
 using Rent.BusinessLogic.Models;
 using Rent.BusinessLogic.Services.Interfaces;
@@ -34,8 +32,7 @@ public class VehicleClientHistoryService(IVehicleClientHistoryRepository reposit
 
         var vchModel = vch.Adapt<VehicleClientHistoryModel>();
 
-        var cacheLifetime = TimeSpan.FromMinutes(10);
-        await distributedCache.CacheData(vchModel, cacheLifetime, key, cancellationToken);
+        await distributedCache.CacheData(vchModel, key, cancellationToken);
 
         return vchModel;
     }
@@ -53,8 +50,7 @@ public class VehicleClientHistoryService(IVehicleClientHistoryRepository reposit
 
     public async Task<VehicleClientHistoryModel> UpdateAsync(VehicleClientHistoryModel vchModel, CancellationToken cancellationToken)
     {
-        var newVchModel = await repository.GetByIdAsync(vchModel.Id, cancellationToken)
-            ?? throw new NotFoundException(ExceptionMessages.NotFound(nameof(VehicleClientHistoryEntity), vchModel.Id));
+        var newVchModel = await repository.GetByIdAsync(vchModel.Id, cancellationToken);
 
         vchModel.Adapt(newVchModel);
 
@@ -63,16 +59,15 @@ public class VehicleClientHistoryService(IVehicleClientHistoryRepository reposit
         var vchModelToReturn = vchModel.Adapt<VehicleClientHistoryModel>();
 
         var key = nameof(VehicleClientHistoryModel) + vchModelToReturn.Id;
-        var cacheLifetime = TimeSpan.FromMinutes(10);
-        await distributedCache.CacheData(vchModelToReturn, cacheLifetime, key, cancellationToken);
+
+        await distributedCache.CacheData(vchModelToReturn, key, cancellationToken);
 
         return vchModelToReturn;
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var modelName = await repository.GetByIdAsync(id, cancellationToken)
-            ?? throw new NotFoundException(ExceptionMessages.NotFound(nameof(VehicleClientHistoryEntity), id));
+        var modelName = await repository.GetByIdAsync(id, cancellationToken);
 
         await repository.RemoveAsync(modelName, cancellationToken);
 
