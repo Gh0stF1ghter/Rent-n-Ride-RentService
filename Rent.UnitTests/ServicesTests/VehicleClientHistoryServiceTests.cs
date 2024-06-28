@@ -1,7 +1,6 @@
 ﻿using FluentAssertions;
 using Mapster;
 using Newtonsoft.Json;
-using Rent.BusinessLogic.Exceptions;
 using Rent.BusinessLogic.Models;
 using Rent.BusinessLogic.Services.Implementations;
 using Rent.DataAccess.Entities;
@@ -60,6 +59,21 @@ public class VehicleClientHistoryServiceTests
     }
 
     [Fact]
+    public async Task GetByIdAsync_InvalidId_ThrowsInvalidOperationException()
+    {
+        //Arrange
+        _repositoryMock.GetByIdThrowsException();
+
+        var service = new VehicleClientHistoryService(_repositoryMock.Object, _distributedCacheMock.Object);
+
+        //Act
+        var response = async () => await service.GetByIdAsync(Guid.NewGuid(), default);
+
+        //Assert
+        await response.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
     public async Task GetByIdAsync_EmptyCache_ReturnsClientModel()
     {
         //Arrange
@@ -110,7 +124,7 @@ public class VehicleClientHistoryServiceTests
     public async Task UpdateAsync_InvalidId_ThrowsNotFoundException()
     {
         //Arrange
-        _repositoryMock.GetById(null);
+        _repositoryMock.GetByIdThrowsException();
 
         var correctUpdatedModel = _vehicleClientHistories[1].Adapt<VehicleClientHistoryModel>();
         var service = new VehicleClientHistoryService(_repositoryMock.Object, _distributedCacheMock.Object);
@@ -119,7 +133,7 @@ public class VehicleClientHistoryServiceTests
         var response = async () => await service.UpdateAsync(correctUpdatedModel, default);
 
         //Assert
-        await response.Should().ThrowAsync<NotFoundException>();
+        await response.Should().ThrowAsync<InvalidOperationException>();
     }
 
     [Fact]
@@ -139,7 +153,7 @@ public class VehicleClientHistoryServiceTests
     public async Task DeleteAsync_InvalidId_ThrowsNotFoundException()
     {
         //Arrange
-        _repositoryMock.GetById(null);
+        _repositoryMock.GetByIdThrowsException();
 
         var service = new VehicleClientHistoryService(_repositoryMock.Object, _distributedCacheMock.Object);
 
@@ -147,6 +161,6 @@ public class VehicleClientHistoryServiceTests
         var response = async () => await service.DeleteAsync(Guid.NewGuid(), default);
 
         //Assert
-        await response.Should().ThrowAsync<NotFoundException>();
+        await response.Should().ThrowAsync<InvalidOperationException>();
     }
 }
