@@ -6,5 +6,5 @@ public interface IVehicleClientHistoryRepository : IRepositoryBase<VehicleClient
 {
     Task<IEnumerable<VehicleClientHistoryEntity>> GetRangeAsync(int page, int pageSize, CancellationToken cancellationToken);
 
-    Task<VehicleClientHistoryEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<VehicleClientHistoryEntity> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 }
