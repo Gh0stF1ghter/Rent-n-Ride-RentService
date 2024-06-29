@@ -14,4 +14,11 @@ public class VehicleClientHistoryRepository(AgencyDbContext context) : Repositor
     public async Task<VehicleClientHistoryEntity> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         await GetByCondition(vch => vch.Id == id)
             .FirstAsync(cancellationToken);
+
+    public async Task RemoveByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var entity = await GetByIdAsync(id, cancellationToken);
+
+        await RemoveAsync(entity, cancellationToken);
+    }
 }
