@@ -153,7 +153,7 @@ public class VehicleClientHistoryServiceTests
     public async Task DeleteAsync_InvalidId_ThrowsNotFoundException()
     {
         //Arrange
-        _repositoryMock.GetByIdThrowsException();
+        _repositoryMock.RemoveByIdThrowsException();
 
         var service = new VehicleClientHistoryService(_repositoryMock.Object, _distributedCacheMock.Object);
 
