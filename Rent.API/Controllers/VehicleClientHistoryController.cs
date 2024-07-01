@@ -1,4 +1,5 @@
 ﻿using Mapster;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rent.API.ViewModels;
 using Rent.API.ViewModels.ShortViewModels;
@@ -47,7 +48,7 @@ public class VehicleClientHistoryController(IVehicleClientHistoryService service
     }
 
     [HttpPut("{id}")]
-    [ActionName("UpdateModelNameById")]
+    [ActionName("VehicleClientHistoryById")]
     public async Task<VehicleClientHistoryViewModel> Update([FromRoute] Guid id, [FromBody] ShortVehicleClientHistoryViewModel updateModelNameViewModel, CancellationToken cancellationToken)
     {
         var vehicleClientHistoryModel = updateModelNameViewModel.Adapt<VehicleClientHistoryModel>();
@@ -62,6 +63,7 @@ public class VehicleClientHistoryController(IVehicleClientHistoryService service
     }
 
     [HttpDelete("{id}")]
+    [Authorize("delete:history-of-use")]
     [ActionName("DeleteVehicleClientHistoryById")]
     public async Task Delete([FromRoute] Guid id, CancellationToken cancellationToken)
     {
