@@ -24,8 +24,8 @@ internal static class Cache
         if (data is null)
             return;
 
-        if (!int.TryParse(lifetime, out var lifetimeMinutes))
-            return;
+        if (!double.TryParse(lifetime, out var lifetimeMinutes))
+            throw new InvalidDataException("Cache lifetime is not valid");
 
         var serializedData = JsonConvert.SerializeObject(data);
 
