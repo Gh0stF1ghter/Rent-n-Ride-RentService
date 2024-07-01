@@ -1,6 +1,8 @@
 using Mapster;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Rent.BusinessLogic.Services.Implementations;
+using Rent.BusinessLogic.Services.Interfaces;
 using Rent.DataAccess.DI;
 using System.Reflection;
 
@@ -16,5 +18,7 @@ public static class ServicesConfiguration
             options.Configuration = configuration.GetConnectionString("Redis"));
 
         TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
+
+        services.AddScoped<IVehicleClientHistoryService, VehicleClientHistoryService>();
     }
 }
