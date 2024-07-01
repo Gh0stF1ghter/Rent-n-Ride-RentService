@@ -6,6 +6,7 @@ namespace Rent.BusinessLogic.Extensions;
 internal static class Cache
 {
     private static readonly string? lifetime = Environment.GetEnvironmentVariable("CACHE_LIFETIME");
+    private const double defaultLifetime = 3.0;
 
     public static async Task<T?> GetDataFromCacheAsync<T>(this IDistributedCache distributedCache, string key, CancellationToken cancellationToken)
     {
@@ -25,7 +26,7 @@ internal static class Cache
             return;
 
         if (!double.TryParse(lifetime, out var lifetimeMinutes))
-            lifetimeMinutes = 3;
+            lifetimeMinutes = defaultLifetime;
 
         var serializedData = JsonConvert.SerializeObject(data);
 
