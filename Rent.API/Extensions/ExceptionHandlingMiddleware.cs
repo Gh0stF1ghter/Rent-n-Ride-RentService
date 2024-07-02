@@ -33,11 +33,6 @@ public class ExceptionHandlingMiddleware(RequestDelegate next)
                 ex.Message
                 ),
 
-            InvalidDataException => new ExceptionResponse(
-                (int)HttpStatusCode.BadRequest,
-                ex.Message
-                ),
-
             _ => new ExceptionResponse(
                 (int)HttpStatusCode.InternalServerError,
                 ex.Message
