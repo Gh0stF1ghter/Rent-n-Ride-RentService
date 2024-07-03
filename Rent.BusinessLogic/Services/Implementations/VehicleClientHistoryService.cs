@@ -1,15 +1,30 @@
 using Mapster;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Configuration;
+using Polly;
+using Polly.Retry;
 using Rent.BusinessLogic.Extensions;
 using Rent.BusinessLogic.Models;
 using Rent.BusinessLogic.Services.Interfaces;
 using Rent.DataAccess.Entities;
 using Rent.DataAccess.Repositories.Interfaces;
+using System.Net.Http.Json;
 
 namespace Rent.BusinessLogic.Services.Implementations;
 
-public class VehicleClientHistoryService(IVehicleClientHistoryRepository repository, IDistributedCache distributedCache) : IVehicleClientHistoryService
+public class VehicleClientHistoryService(
+    IVehicleClientHistoryRepository repository,
+    IDistributedCache distributedCache,
+    IHttpClientFactory httpClientFactory,
+    IConfiguration configuration
+    ) : IVehicleClientHistoryService
 {
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
+
+    private readonly AsyncRetryPolicy<HttpResponseMessage> _retryPolicy = Policy<HttpResponseMessage>
+        .Handle<Exception>()
+        .RetryAsync(3);
+
     public async Task<IEnumerable<VehicleClientHistoryModel>> GetRangeAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
         var vehicleClientHistories = await repository.GetRangeAsync(page, pageSize, cancellationToken);
@@ -39,9 +54,47 @@ public class VehicleClientHistoryService(IVehicleClientHistoryRepository reposit
 
     public async Task<VehicleClientHistoryModel> AddAsync(VehicleClientHistoryModel vchModel, CancellationToken cancellationToken)
     {
+
+        var totalRentDays = (vchModel.EndDate - vchModel.StartDate).TotalDays;
+
+        var vehicleResponse = await _retryPolicy.ExecuteAsync(async () =>
+            await _httpClient.GetAsync(configuration.GetConnectionString("CatalogueServiceConnection") + vchModel.VehicleId, cancellationToken));
+
+        var vehicle = await vehicleResponse.Content.ReadFromJsonAsync<VehicleModel>(cancellationToken);
+
+        var totalCost = Convert.ToDecimal(totalRentDays) * vehicle.RentCost;
+
+        var userResponse = await _retryPolicy.ExecuteAsync(async () =>
+            await _httpClient.GetAsync(configuration.GetConnectionString("UserServiceConnection") + vchModel.ClientId, cancellationToken)
+            );
+
+        var user = await userResponse.Content.ReadFromJsonAsync<ClientModel>(cancellationToken);
+
+        if (user.Balance < totalCost)
+        {
+
+        }
+
+        user.Balance -= totalCost;
+
         var vch = vchModel.Adapt<VehicleClientHistoryEntity>();
 
         await repository.AddAsync(vch, cancellationToken);
+
+        await _retryPolicy.ExecuteAsync(async () =>
+        {
+            var response = await _httpClient.PutAsJsonAsync(configuration.GetConnectionString("UserServiceConnection") + vchModel.ClientId, user, cancellationToken);
+            Console.WriteLine(response.StatusCode);
+
+            return response;
+        }
+        );
+
+        var resultResponse = await _retryPolicy.ExecuteAsync(async () =>
+            await _httpClient.GetAsync(configuration.GetConnectionString("UserServiceConnection") + vchModel.ClientId, cancellationToken)
+            );
+
+        var result = await resultResponse.Content.ReadFromJsonAsync<ClientModel>(cancellationToken);
 
         var newVchModel = vch.Adapt<VehicleClientHistoryModel>();
 
