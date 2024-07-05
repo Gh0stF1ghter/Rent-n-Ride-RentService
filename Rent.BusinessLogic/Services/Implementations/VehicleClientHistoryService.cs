@@ -115,13 +115,40 @@ public class VehicleClientHistoryService(
 
     public async Task<VehicleClientHistoryModel> UpdateAsync(VehicleClientHistoryModel vchModel, CancellationToken cancellationToken)
     {
-        var newVchModel = await repository.GetByIdAsync(vchModel.Id, cancellationToken);
+        var vehicleConnection = _catalogueServiceConnection + vchModel.VehicleId;
+        var userConnection = _userServiceConnection + vchModel.ClientId;
 
-        vchModel.Adapt(newVchModel);
+        var vehicle = await GetFromServiceAsModelAsync<VehicleModel>(vehicleConnection, cancellationToken);
 
-        await repository.UpdateAsync(newVchModel, cancellationToken);
+        var user = await GetFromServiceAsModelAsync<ClientModel>(userConnection, cancellationToken);
+
+        var vchEntity = await repository.GetByIdAsync(vchModel.Id, cancellationToken);
+
+        var oldDateTime = vchEntity.EndDate;
+
+        var addedRentDays = (vchModel.EndDate - vchEntity.EndDate).TotalDays;
+
+        if (addedRentDays <= 0)
+            throw new BadRequestException(ExceptionMessages.NewEndDateLessThanCurrent(vchModel.EndDate, vchEntity.EndDate));
+
+        AssignAsRented(addedRentDays, vehicle, user);
+
+        vchModel.Adapt(vchEntity);
+
+        await repository.UpdateAsync(vchEntity, cancellationToken);
 
         var vchModelToReturn = vchModel.Adapt<VehicleClientHistoryModel>();
+
+        var response = await PutInServiceAsync(userConnection, user, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            vchModelToReturn.EndDate = oldDateTime;
+
+            await UpdateAsync(vchModelToReturn, cancellationToken);
+
+            await ProcessExceptionAsync(response, _userServiceConnection + user.Id, cancellationToken);
+        }
 
         var key = nameof(VehicleClientHistoryModel) + vchModelToReturn.Id;
 
