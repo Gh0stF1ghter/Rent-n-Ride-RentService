@@ -3,11 +3,14 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Polly;
 using Polly.Retry;
+using Rent.BusinessLogic.Exceptions;
+using Rent.BusinessLogic.Exceptions.ExceptionMessages;
 using Rent.BusinessLogic.Extensions;
 using Rent.BusinessLogic.Models;
 using Rent.BusinessLogic.Services.Interfaces;
 using Rent.DataAccess.Entities;
 using Rent.DataAccess.Repositories.Interfaces;
+using System.Net;
 using System.Net.Http.Json;
 
 namespace Rent.BusinessLogic.Services.Implementations;
@@ -21,9 +24,13 @@ public class VehicleClientHistoryService(
 {
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
 
-    private readonly AsyncRetryPolicy<HttpResponseMessage> _retryPolicy = Policy<HttpResponseMessage>
-        .Handle<Exception>()
-        .RetryAsync(3);
+    private readonly AsyncRetryPolicy<HttpResponseMessage> _retryPolicy = Policy
+        .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
+        .Or<HttpRequestException>()
+        .WaitAndRetryAsync(2, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)), onRetry: (outcome, timespan, retryAttempt, context) =>
+        {
+            Console.WriteLine($"Error while proccessing request. Error:{outcome.Exception?.Message} Attempt: {retryAttempt} Waiting:{timespan} to retry");
+        });
 
     public async Task<IEnumerable<VehicleClientHistoryModel>> GetRangeAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
