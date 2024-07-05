@@ -22,6 +22,9 @@ public class VehicleClientHistoryService(
     IConfiguration configuration
     ) : IVehicleClientHistoryService
 {
+    private readonly string? _userServiceConnection = configuration.GetConnectionString("UserServiceConnection");
+    private readonly string? _catalogueServiceConnection = configuration.GetConnectionString("CatalogueServiceConnection");
+
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
 
     private readonly AsyncRetryPolicy<HttpResponseMessage> _retryPolicy = Policy
@@ -61,6 +64,8 @@ public class VehicleClientHistoryService(
 
     public async Task<VehicleClientHistoryModel> AddAsync(VehicleClientHistoryModel vchModel, CancellationToken cancellationToken)
     {
+        var vehicleConnection = _catalogueServiceConnection + vchModel.VehicleId;
+        var userConnection = _userServiceConnection + vchModel.ClientId;
 
         var totalRentDays = (vchModel.EndDate - vchModel.StartDate).TotalDays;
 
