@@ -139,4 +139,62 @@ public class VehicleClientHistoryService(
         var key = nameof(VehicleClientHistoryModel) + id;
         await distributedCache.RemoveAsync(key, cancellationToken);
     }
+
+    private async Task<T> GetFromServiceAsModelAsync<T>(string connectionString, CancellationToken cancellationToken)
+    {
+        var response = await _retryPolicy.ExecuteAsync(async () =>
+            await _httpClient.GetAsync(connectionString, cancellationToken));
+
+        if (!response.IsSuccessStatusCode)
+            await ProcessExceptionAsync(response, connectionString, cancellationToken);
+
+        var result = await response.Content.ReadFromJsonAsync<T>(cancellationToken) ??
+            throw new NotFoundException(ExceptionMessages.NotFoundInService(nameof(T), connectionString));
+
+        return result;
+    }
+
+    private async Task<HttpResponseMessage> PutInServiceAsync<T>(string? connectionString, T entity, CancellationToken cancellationToken) =>
+        await _retryPolicy.ExecuteAsync(async () =>
+        {
+            var response = await _httpClient.PutAsJsonAsync(connectionString, entity, cancellationToken);
+            Console.WriteLine(response.StatusCode);
+
+            return response;
+        });
+
+    private async Task<HttpResponseMessage> DeleteFromServiceAsync(string? entityConnectionString, CancellationToken cancellationToken) =>
+        await _retryPolicy.ExecuteAsync(async () =>
+        {
+            var response = await _httpClient.DeleteAsync(entityConnectionString, cancellationToken);
+            Console.WriteLine(response.StatusCode);
+
+            return response;
+        });
+
+    private static void AssignAsRented(double rentDays, VehicleModel vehicleModel, ClientModel clientModel)
+    {
+        var totalCost = Convert.ToDecimal(rentDays) * vehicleModel.RentCost;
+
+        if (clientModel.Balance < totalCost)
+            throw new BadRequestException(ExceptionMessages.InsufficientFunds(clientModel.Id, clientModel.Balance, totalCost));
+
+        clientModel.Balance -= totalCost;
+
+        vehicleModel.IsRented = true;
+        clientModel.IsRenting = true;
+    }
+
+    private static async Task ProcessExceptionAsync(HttpResponseMessage response, string? connectionString, CancellationToken cancellationToken)
+    {
+        var exceptionResponse = await response.Content.ReadAsStringAsync(cancellationToken)
+            ?? throw new ServiceException(ExceptionMessages.ServiceError(connectionString));
+
+        throw response.StatusCode switch
+        {
+            HttpStatusCode.NotFound => new NotFoundException(exceptionResponse),
+            HttpStatusCode.BadRequest => new BadRequestException(exceptionResponse),
+            _ => new ServiceException(ExceptionMessages.ServiceError(connectionString)),
+        };
+    }
 }
