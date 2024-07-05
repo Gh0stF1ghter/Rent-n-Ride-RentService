@@ -69,46 +69,42 @@ public class VehicleClientHistoryService(
 
         var totalRentDays = (vchModel.EndDate - vchModel.StartDate).TotalDays;
 
-        var vehicleResponse = await _retryPolicy.ExecuteAsync(async () =>
-            await _httpClient.GetAsync(configuration.GetConnectionString("CatalogueServiceConnection") + vchModel.VehicleId, cancellationToken));
+        var vehicle = await GetFromServiceAsModelAsync<VehicleModel>(vehicleConnection, cancellationToken);
 
-        var vehicle = await vehicleResponse.Content.ReadFromJsonAsync<VehicleModel>(cancellationToken);
+        if (vehicle.IsRented)
+            throw new BadRequestException(ExceptionMessages.VehicleIsRented(vehicle.Id));
 
-        var totalCost = Convert.ToDecimal(totalRentDays) * vehicle.RentCost;
+        var user = await GetFromServiceAsModelAsync<ClientModel>(userConnection, cancellationToken);
 
-        var userResponse = await _retryPolicy.ExecuteAsync(async () =>
-            await _httpClient.GetAsync(configuration.GetConnectionString("UserServiceConnection") + vchModel.ClientId, cancellationToken)
-            );
+        if (user.IsRenting)
+            throw new BadRequestException(ExceptionMessages.UserIsRenting(user.Id));
 
-        var user = await userResponse.Content.ReadFromJsonAsync<ClientModel>(cancellationToken);
-
-        if (user.Balance < totalCost)
-        {
-
-        }
-
-        user.Balance -= totalCost;
+        AssignAsRented(totalRentDays, vehicle, user);
 
         var vch = vchModel.Adapt<VehicleClientHistoryEntity>();
 
         await repository.AddAsync(vch, cancellationToken);
 
-        await _retryPolicy.ExecuteAsync(async () =>
-        {
-            var response = await _httpClient.PutAsJsonAsync(configuration.GetConnectionString("UserServiceConnection") + vchModel.ClientId, user, cancellationToken);
-            Console.WriteLine(response.StatusCode);
-
-            return response;
-        }
-        );
-
-        var resultResponse = await _retryPolicy.ExecuteAsync(async () =>
-            await _httpClient.GetAsync(configuration.GetConnectionString("UserServiceConnection") + vchModel.ClientId, cancellationToken)
-            );
-
-        var result = await resultResponse.Content.ReadFromJsonAsync<ClientModel>(cancellationToken);
-
         var newVchModel = vch.Adapt<VehicleClientHistoryModel>();
+
+        var vehicleResponse = await PutInServiceAsync(vehicleConnection, vehicle, cancellationToken);
+
+        if (!vehicleResponse.IsSuccessStatusCode)
+        {
+            await repository.RemoveAsync(vch, cancellationToken);
+
+            await ProcessExceptionAsync(vehicleResponse, vehicleConnection, cancellationToken);
+        }
+
+        var userResponse = await PutInServiceAsync(userConnection, user, cancellationToken);
+
+        if (!userResponse.IsSuccessStatusCode)
+        {
+            await repository.RemoveAsync(vch, cancellationToken);
+            await DeleteFromServiceAsync(userConnection, cancellationToken);
+
+            await ProcessExceptionAsync(userResponse, _userServiceConnection, cancellationToken);
+        }
 
         return newVchModel;
     }
