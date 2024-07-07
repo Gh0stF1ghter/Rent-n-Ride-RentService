@@ -122,10 +122,13 @@ public class VehicleClientHistoryServiceTests
     public async Task AddAsync_VehicleClientHistoryModel_ReturnsVehicleClientHistoryModel()
     {
         //Arrange
+        var client = DataGenerator.AddClientModel(9000, true);
+
         var httpClient = new HttpClientMockBuilder()
             .WithBaseAddress(new("http://localhost:5054"))
             .WithRequest("/api/client/", HttpMethod.Get)
-            .RespondingJsonContent<ClientModel>();
+            .RespondingJsonContent<ClientModel>(client)
+            .Build();
 
         var correctModel = _vehicleClientHistories[0].Adapt<VehicleClientHistoryModel>();
         var service = new VehicleClientHistoryService(_repositoryMock.Object,
