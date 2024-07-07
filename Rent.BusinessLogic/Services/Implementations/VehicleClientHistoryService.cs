@@ -65,7 +65,7 @@ public class VehicleClientHistoryService(
     public async Task<VehicleClientHistoryModel> AddAsync(VehicleClientHistoryModel vchModel, CancellationToken cancellationToken)
     {
         var vehicleConnection = _catalogueServiceConnection + vchModel.VehicleId;
-        var userConnection = _userServiceConnection + vchModel.ClientId;
+        var clientConnection = _userServiceConnection + vchModel.ClientId;
 
         var totalRentDays = (vchModel.EndDate - vchModel.StartDate).TotalDays;
 
@@ -74,12 +74,12 @@ public class VehicleClientHistoryService(
         if (vehicle.IsRented)
             throw new BadRequestException(ExceptionMessages.VehicleIsRented(vehicle.Id));
 
-        var user = await GetFromServiceAsModelAsync<ClientModel>(userConnection, cancellationToken);
+        var client = await GetFromServiceAsModelAsync<ClientModel>(clientConnection, cancellationToken);
 
-        if (user.IsRenting)
-            throw new BadRequestException(ExceptionMessages.UserIsRenting(user.Id));
+        if (client.IsRenting)
+            throw new BadRequestException(ExceptionMessages.UserIsRenting(client.Id));
 
-        AssignAsRented(totalRentDays, vehicle, user);
+        AssignAsRented(totalRentDays, vehicle, client);
 
         var vch = vchModel.Adapt<VehicleClientHistoryEntity>();
 
@@ -96,12 +96,12 @@ public class VehicleClientHistoryService(
             await ProcessExceptionAsync(vehicleResponse, vehicleConnection, cancellationToken);
         }
 
-        var userResponse = await PutInServiceAsync(userConnection, user, cancellationToken);
+        var userResponse = await PutInServiceAsync(clientConnection, client, cancellationToken);
 
         if (!userResponse.IsSuccessStatusCode)
         {
             await repository.RemoveAsync(vch, cancellationToken);
-            await DeleteFromServiceAsync(userConnection, cancellationToken);
+            await DeleteFromServiceAsync(clientConnection, cancellationToken);
 
             await ProcessExceptionAsync(userResponse, _userServiceConnection, cancellationToken);
         }
@@ -112,11 +112,11 @@ public class VehicleClientHistoryService(
     public async Task<VehicleClientHistoryModel> UpdateAsync(VehicleClientHistoryModel vchModel, CancellationToken cancellationToken)
     {
         var vehicleConnection = _catalogueServiceConnection + vchModel.VehicleId;
-        var userConnection = _userServiceConnection + vchModel.ClientId;
+        var clientConnection = _userServiceConnection + vchModel.ClientId;
 
         var vehicle = await GetFromServiceAsModelAsync<VehicleModel>(vehicleConnection, cancellationToken);
 
-        var user = await GetFromServiceAsModelAsync<ClientModel>(userConnection, cancellationToken);
+        var client = await GetFromServiceAsModelAsync<ClientModel>(clientConnection, cancellationToken);
 
         var vchEntity = await repository.GetByIdAsync(vchModel.Id, cancellationToken);
 
@@ -127,7 +127,7 @@ public class VehicleClientHistoryService(
         if (addedRentDays <= 0)
             throw new BadRequestException(ExceptionMessages.NewEndDateLessThanCurrent(vchModel.EndDate, vchEntity.EndDate));
 
-        AssignAsRented(addedRentDays, vehicle, user);
+        AssignAsRented(addedRentDays, vehicle, client);
 
         vchModel.Adapt(vchEntity);
 
@@ -135,7 +135,7 @@ public class VehicleClientHistoryService(
 
         var vchModelToReturn = vchModel.Adapt<VehicleClientHistoryModel>();
 
-        var response = await PutInServiceAsync(userConnection, user, cancellationToken);
+        var response = await PutInServiceAsync(clientConnection, client, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -143,7 +143,7 @@ public class VehicleClientHistoryService(
 
             await UpdateAsync(vchModelToReturn, cancellationToken);
 
-            await ProcessExceptionAsync(response, _userServiceConnection + user.Id, cancellationToken);
+            await ProcessExceptionAsync(response, _userServiceConnection + client.Id, cancellationToken);
         }
 
         var key = nameof(VehicleClientHistoryModel) + vchModelToReturn.Id;

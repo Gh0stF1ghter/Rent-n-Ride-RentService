@@ -1,16 +1,20 @@
 ﻿using FluentAssertions;
 using Mapster;
+using Moq;
 using Newtonsoft.Json;
 using Rent.BusinessLogic.Models;
 using Rent.BusinessLogic.Services.Implementations;
 using Rent.DataAccess.Entities;
 using Rent.UnitTests.DataGeneration;
 using Rent.UnitTests.Mocks;
+using SoloX.CodeQuality.Test.Helpers.Http;
 using System.Text;
 
 namespace Rent.UnitTests.ServicesTests;
 public class VehicleClientHistoryServiceTests
 {
+    private readonly ConfigurationMock _configurationMock = new();
+    private readonly Mock<IHttpClientFactory> _httpClientFactoryMock = new();
     private readonly VehicleClientHistoryRepositoryMock _repositoryMock = new();
 
     private readonly DistributedCacheMock _distributedCacheMock = new();
@@ -19,6 +23,12 @@ public class VehicleClientHistoryServiceTests
 
     public VehicleClientHistoryServiceTests()
     {
+        _configurationMock.GetCatalogueCoonnection();
+        _configurationMock.GetUserConnection();
+
+        _httpClientFactoryMock
+            .Setup(_ => _.CreateClient(It.IsAny<string>()));
+
         _repositoryMock.GetRange(_vehicleClientHistories);
         _repositoryMock.GetById(_vehicleClientHistories[0]);
         _repositoryMock.IsExists(true);
@@ -30,7 +40,11 @@ public class VehicleClientHistoryServiceTests
         //Arrange
         var correctModels = _vehicleClientHistories.Adapt<IEnumerable<VehicleClientHistoryModel>>();
 
-        var service = new VehicleClientHistoryService(_repositoryMock.Object, _distributedCacheMock.Object);
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
 
         //Act
         var response = await service.GetRangeAsync(1, 1, default);
@@ -49,7 +63,11 @@ public class VehicleClientHistoryServiceTests
         var cachedModel = Encoding.UTF8.GetBytes(serializedModel);
         _distributedCacheMock.GetDataFromCache(cachedModel);
 
-        var service = new VehicleClientHistoryService(_repositoryMock.Object, _distributedCacheMock.Object);
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
 
         //Act
         var response = await service.GetByIdAsync(Guid.NewGuid(), default);
@@ -64,7 +82,11 @@ public class VehicleClientHistoryServiceTests
         //Arrange
         _repositoryMock.GetByIdThrowsException();
 
-        var service = new VehicleClientHistoryService(_repositoryMock.Object, _distributedCacheMock.Object);
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
 
         //Act
         var response = async () => await service.GetByIdAsync(Guid.NewGuid(), default);
@@ -83,7 +105,11 @@ public class VehicleClientHistoryServiceTests
         var cachedModel = Encoding.UTF8.GetBytes(serializedModel);
         _distributedCacheMock.GetDataFromCache(cachedModel);
 
-        var service = new VehicleClientHistoryService(_repositoryMock.Object, _distributedCacheMock.Object);
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
 
         //Act
         var response = await service.GetByIdAsync(Guid.NewGuid(), default);
@@ -96,8 +122,17 @@ public class VehicleClientHistoryServiceTests
     public async Task AddAsync_VehicleClientHistoryModel_ReturnsVehicleClientHistoryModel()
     {
         //Arrange
+        var httpClient = new HttpClientMockBuilder()
+            .WithBaseAddress(new("http://localhost:5054"))
+            .WithRequest("/api/client/", HttpMethod.Get)
+            .RespondingJsonContent<ClientModel>();
+
         var correctModel = _vehicleClientHistories[0].Adapt<VehicleClientHistoryModel>();
-        var service = new VehicleClientHistoryService(_repositoryMock.Object, _distributedCacheMock.Object);
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
 
         //Act
         var response = await service.AddAsync(correctModel, default);
@@ -111,7 +146,11 @@ public class VehicleClientHistoryServiceTests
     {
         //Arrange
         var correctUpdatedModel = _vehicleClientHistories[1].Adapt<VehicleClientHistoryModel>();
-        var service = new VehicleClientHistoryService(_repositoryMock.Object, _distributedCacheMock.Object);
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
 
         //Act
         var response = await service.UpdateAsync(correctUpdatedModel, default);
@@ -127,7 +166,11 @@ public class VehicleClientHistoryServiceTests
         _repositoryMock.GetByIdThrowsException();
 
         var correctUpdatedModel = _vehicleClientHistories[1].Adapt<VehicleClientHistoryModel>();
-        var service = new VehicleClientHistoryService(_repositoryMock.Object, _distributedCacheMock.Object);
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
 
         //Act
         var response = async () => await service.UpdateAsync(correctUpdatedModel, default);
@@ -140,7 +183,11 @@ public class VehicleClientHistoryServiceTests
     public async Task DeleteAsync_VehicleClientHistoryId_()
     {
         //Arrange
-        var service = new VehicleClientHistoryService(_repositoryMock.Object, _distributedCacheMock.Object);
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
 
         //Act
         var response = async () => await service.DeleteAsync(Guid.NewGuid(), default);
@@ -155,7 +202,11 @@ public class VehicleClientHistoryServiceTests
         //Arrange
         _repositoryMock.GetByIdThrowsException();
 
-        var service = new VehicleClientHistoryService(_repositoryMock.Object, _distributedCacheMock.Object);
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
 
         //Act
         var response = async () => await service.DeleteAsync(Guid.NewGuid(), default);
