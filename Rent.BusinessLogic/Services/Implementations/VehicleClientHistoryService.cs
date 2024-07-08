@@ -111,13 +111,6 @@ public class VehicleClientHistoryService(
 
     public async Task<VehicleClientHistoryModel> UpdateAsync(VehicleClientHistoryModel vchModel, CancellationToken cancellationToken)
     {
-        var vehicleConnection = _catalogueServiceConnection + vchModel.VehicleId;
-        var clientConnection = _userServiceConnection + vchModel.ClientId;
-
-        var vehicle = await GetFromServiceAsModelAsync<VehicleModel>(vehicleConnection, cancellationToken);
-
-        var client = await GetFromServiceAsModelAsync<ClientModel>(clientConnection, cancellationToken);
-
         var vchEntity = await repository.GetByIdAsync(vchModel.Id, cancellationToken);
 
         var oldDateTime = vchEntity.EndDate;
@@ -126,6 +119,13 @@ public class VehicleClientHistoryService(
 
         if (addedRentDays <= 0)
             throw new BadRequestException(ExceptionMessages.NewEndDateLessThanCurrent(vchModel.EndDate, vchEntity.EndDate));
+
+        var vehicleConnection = _catalogueServiceConnection + vchModel.VehicleId;
+        var clientConnection = _userServiceConnection + vchModel.ClientId;
+
+        var vehicle = await GetFromServiceAsModelAsync<VehicleModel>(vehicleConnection, cancellationToken);
+
+        var client = await GetFromServiceAsModelAsync<ClientModel>(clientConnection, cancellationToken);
 
         AssignAsRented(addedRentDays, vehicle, client);
 
