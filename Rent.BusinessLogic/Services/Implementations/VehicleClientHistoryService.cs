@@ -144,7 +144,9 @@ public class VehicleClientHistoryService(
         {
             vchModelToReturn.EndDate = oldDateTime;
 
-            await UpdateAsync(vchModelToReturn, cancellationToken);
+            vchModelToReturn.Adapt(vchEntity);
+
+            await repository.UpdateAsync(vchEntity, cancellationToken);
 
             await ProcessExceptionAsync(response, _userServiceConnection + client.Id, cancellationToken);
         }
