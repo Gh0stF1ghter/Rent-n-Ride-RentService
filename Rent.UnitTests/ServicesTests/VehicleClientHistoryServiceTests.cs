@@ -8,26 +8,28 @@ using Rent.DataAccess.Entities;
 using Rent.UnitTests.DataGeneration;
 using Rent.UnitTests.Mocks;
 using SoloX.CodeQuality.Test.Helpers.Http;
+using System.Net;
 using System.Text;
 
 namespace Rent.UnitTests.ServicesTests;
+
 public class VehicleClientHistoryServiceTests
 {
     private readonly ConfigurationMock _configurationMock = new();
-    private readonly Mock<IHttpClientFactory> _httpClientFactoryMock = new();
+    private readonly HttpClientFactoryMock _httpClientFactoryMock = new();
+
     private readonly VehicleClientHistoryRepositoryMock _repositoryMock = new();
 
     private readonly DistributedCacheMock _distributedCacheMock = new();
 
-    private readonly List<VehicleClientHistoryEntity> _vehicleClientHistories = DataGenerator.AddVehicleClientHistoryData(5);
+    private readonly List<VehicleClientHistoryEntity> _vehicleClientHistories = DataGenerator.GenerateVehicleClientHistoryData(5);
 
     public VehicleClientHistoryServiceTests()
     {
         _configurationMock.GetCatalogueCoonnection();
         _configurationMock.GetUserConnection();
 
-        _httpClientFactoryMock
-            .Setup(_ => _.CreateClient(It.IsAny<string>()));
+        _httpClientFactoryMock.CreateClient(It.IsAny<HttpClient>());
 
         _repositoryMock.GetRange(_vehicleClientHistories);
         _repositoryMock.GetById(_vehicleClientHistories[0]);
@@ -118,19 +120,27 @@ public class VehicleClientHistoryServiceTests
         response.Should().BeEquivalentTo(correctModel);
     }
 
-    [Fact]
-    public async Task AddAsync_VehicleClientHistoryModel_ReturnsVehicleClientHistoryModel()
+    [Theory]
+    [InlineData(9000, 1000)]
+    [InlineData(9000, 9000)]
+    public async Task AddAsync_VehicleClientHistoryModel_ReturnsVehicleClientHistoryModel(decimal userBaseBalance, decimal rentCost)
     {
         //Arrange
-        var client = DataGenerator.AddClientModel(9000, true);
+        var correctModel = _vehicleClientHistories[0].Adapt<VehicleClientHistoryModel>();
+
+        var totalRentDays = (correctModel.EndDate - correctModel.StartDate).TotalDays;
+
+        var clientBalance = userBaseBalance * Convert.ToDecimal(totalRentDays);
+
+        var client = DataGenerator.GenerateClientModel(clientBalance);
+        var vehicle = DataGenerator.GenerateVehicleModel(rentCost);
 
         var httpClient = new HttpClientMockBuilder()
-            .WithBaseAddress(new("http://localhost:5054"))
-            .WithRequest("/api/client/", HttpMethod.Get)
-            .RespondingJsonContent<ClientModel>(client)
-            .Build();
+            .BuildHttpClient(client, vehicle);
 
-        var correctModel = _vehicleClientHistories[0].Adapt<VehicleClientHistoryModel>();
+        _httpClientFactoryMock
+            .CreateClient(httpClient);
+
         var service = new VehicleClientHistoryService(_repositoryMock.Object,
             _distributedCacheMock.Object,
             _httpClientFactoryMock.Object,
@@ -144,11 +154,32 @@ public class VehicleClientHistoryServiceTests
         response.Should().BeEquivalentTo(correctModel);
     }
 
-    [Fact]
-    public async Task UpdateAsync_VehicleClientHistoryModel_ReturnsVehicleClientHistoryModel()
+    [Theory]
+    [InlineData(9000, 1000)]
+    [InlineData(9000, 9000)]
+    public async Task UpdateAsync_VehicleClientHistoryModel_ReturnsVehicleClientHistoryModel(decimal userBaseBalance, decimal rentCost)
     {
         //Arrange
-        var correctUpdatedModel = _vehicleClientHistories[1].Adapt<VehicleClientHistoryModel>();
+        var vehicleClientHistory = DataGenerator.GenerateVehicleClientHistoryData(1)[0];
+        vehicleClientHistory.EndDate = DateTime.UtcNow;
+
+        var correctUpdatedModel = vehicleClientHistory.Adapt<VehicleClientHistoryModel>();
+
+        correctUpdatedModel.EndDate = DateTime.UtcNow + TimeSpan.FromDays(4);
+
+        var totalRentDays = (correctUpdatedModel.EndDate - correctUpdatedModel.StartDate).TotalDays;
+
+        var clientBalance = userBaseBalance * Convert.ToDecimal(totalRentDays);
+
+        var client = DataGenerator.GenerateClientModel(clientBalance);
+        var vehicle = DataGenerator.GenerateVehicleModel(rentCost);
+
+        var httpClient = new HttpClientMockBuilder()
+            .BuildHttpClient(client, vehicle);
+
+        _httpClientFactoryMock
+            .CreateClient(httpClient);
+
         var service = new VehicleClientHistoryService(_repositoryMock.Object,
             _distributedCacheMock.Object,
             _httpClientFactoryMock.Object,
