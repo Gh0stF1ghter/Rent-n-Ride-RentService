@@ -11,7 +11,14 @@ public class VehicleClientHistoryRepository(AgencyDbContext context) : Repositor
         await GetRange(page, pageSize)
             .ToListAsync(cancellationToken);
 
-    public async Task<VehicleClientHistoryEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
+    public async Task<VehicleClientHistoryEntity> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         await GetByCondition(vch => vch.Id == id)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstAsync(cancellationToken);
+
+    public async Task RemoveByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var entity = await GetByIdAsync(id, cancellationToken);
+
+        await RemoveAsync(entity, cancellationToken);
+    }
 }

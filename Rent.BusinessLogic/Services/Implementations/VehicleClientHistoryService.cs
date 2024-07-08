@@ -160,9 +160,7 @@ public class VehicleClientHistoryService(
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var modelName = await repository.GetByIdAsync(id, cancellationToken);
-
-        await repository.RemoveAsync(modelName, cancellationToken);
+        await repository.RemoveByIdAsync(id, cancellationToken);
 
         var key = nameof(VehicleClientHistoryModel) + id;
         await distributedCache.RemoveAsync(key, cancellationToken);

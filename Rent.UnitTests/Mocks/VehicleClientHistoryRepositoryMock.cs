@@ -21,6 +21,10 @@ internal class VehicleClientHistoryRepositoryMock : Mock<IVehicleClientHistoryRe
     Setup(cr => cr.GetByIdAsync(It.IsAny<Guid>(), _anyToken))
         .ThrowsAsync(new InvalidOperationException());
 
+    public void RemoveByIdThrowsException() =>
+    Setup(cr => cr.RemoveByIdAsync(It.IsAny<Guid>(), _anyToken))
+        .ThrowsAsync(new InvalidOperationException());
+
     public void IsExists(bool boolToReturn) =>
         Setup(cr => cr.IsExistsAsync(It.IsAny<Expression<Func<VehicleClientHistoryEntity, bool>>>(), _anyToken))
         .ReturnsAsync(boolToReturn);
