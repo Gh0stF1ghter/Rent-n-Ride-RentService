@@ -69,6 +69,9 @@ public class VehicleClientHistoryService(
 
         var totalRentDays = (vchModel.EndDate - vchModel.StartDate).TotalDays;
 
+        if (double.IsNegative(totalRentDays))
+            throw new BadRequestException(ExceptionMessages.EndDateLessThanStartDate(vchModel.EndDate, vchModel.StartDate));
+
         var vehicle = await GetFromServiceAsModelAsync<VehicleModel>(vehicleConnection, cancellationToken);
 
         if (vehicle.IsRented)

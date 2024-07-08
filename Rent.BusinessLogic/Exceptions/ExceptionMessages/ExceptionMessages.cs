@@ -10,6 +10,9 @@ internal static class ExceptionMessages
     public static string NewEndDateLessThanCurrent(DateTime newEndDateTime, DateTime currentEndDateTime) =>
         $"New end datetime is less than updated ({newEndDateTime} against {currentEndDateTime})";
 
+    public static string EndDateLessThanStartDate(DateTime EndDateTime, DateTime StartDateTime) =>
+        $"End datetime is less than start datetime ({EndDateTime} against {StartDateTime})";
+
     public static string NotFoundInService(string entityType, string? connection) =>
         $"{entityType} was not found while requesting {connection}";
 
