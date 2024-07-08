@@ -218,11 +218,15 @@ public class VehicleClientHistoryServiceTests
     }
 
     [Theory]
-    [InlineData(HttpStatusCode.OK, HttpStatusCode.NotFound)]
-    [InlineData(HttpStatusCode.NotFound, HttpStatusCode.OK)]
+    [InlineData(HttpStatusCode.OK, HttpStatusCode.NotFound, HttpStatusCode.OK, HttpStatusCode.OK)]
+    [InlineData(HttpStatusCode.NotFound, HttpStatusCode.OK, HttpStatusCode.OK, HttpStatusCode.OK)]
+    [InlineData(HttpStatusCode.OK, HttpStatusCode.OK, HttpStatusCode.NotFound, HttpStatusCode.OK)]
+    [InlineData(HttpStatusCode.OK, HttpStatusCode.OK, HttpStatusCode.OK, HttpStatusCode.NotFound)]
     public async Task AddAsync_ServiceResponseIsNullOrEmpty_ThrowsNotFoundException(
         HttpStatusCode clientGetResponseStatusCode,
-        HttpStatusCode vehicleGetResponseStatusCode
+        HttpStatusCode vehicleGetResponseStatusCode,
+        HttpStatusCode clientPutResponseStatusCode,
+        HttpStatusCode vehiclePutResponseStatusCode
         )
     {
         //Arrange
@@ -236,7 +240,9 @@ public class VehicleClientHistoryServiceTests
             client,
             vehicle,
             clientGetResponseStatus: clientGetResponseStatusCode,
-            vehicleGetResponseStatus: vehicleGetResponseStatusCode
+            vehicleGetResponseStatus: vehicleGetResponseStatusCode,
+            clientPutResponseStatus: clientPutResponseStatusCode,
+            vehiclePutResponseStatus: vehiclePutResponseStatusCode
             );
 
         _httpClientFactoryMock
@@ -372,6 +378,45 @@ public class VehicleClientHistoryServiceTests
 
         //Assert
         await response.Should().ThrowAsync<BadRequestException>();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_InvalidClientServiceResponse_ThrowsServiceException()
+    {
+        //Arrange
+        var vehicleClientHistory = DataGenerator.GenerateVehicleClientHistoryData(1)[0];
+        vehicleClientHistory.EndDate = DateTime.UtcNow;
+
+        var correctUpdatedModel = vehicleClientHistory.Adapt<VehicleClientHistoryModel>();
+
+        correctUpdatedModel.EndDate = DateTime.UtcNow + TimeSpan.FromDays(4);
+
+        var totalRentDays = (correctUpdatedModel.EndDate - correctUpdatedModel.StartDate).TotalDays;
+
+        var clientBalance = 9000 * Convert.ToDecimal(totalRentDays);
+
+        var client = DataGenerator.GenerateClientModel(clientBalance);
+        var vehicle = DataGenerator.GenerateVehicleModel(1000);
+
+        var httpClient = new HttpClientMockBuilder()
+            .BuildHttpClient(client, vehicle, clientPutResponseStatus: HttpStatusCode.InternalServerError);
+
+        _httpClientFactoryMock
+            .CreateClient(httpClient);
+
+        _repositoryMock.GetById(vehicleClientHistory);
+
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
+
+        //Act
+        var response = async () => await service.UpdateAsync(correctUpdatedModel, default);
+
+        //Assert
+        await response.Should().ThrowAsync<ServiceException>();
     }
 
     [Fact]
