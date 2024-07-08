@@ -17,7 +17,7 @@ internal static class HttpClientMockBuilderExtension
         HttpStatusCode clientGetResponseStatus = HttpStatusCode.OK,
         HttpStatusCode vehicleGetResponseStatus = HttpStatusCode.OK,
         HttpStatusCode clientPutResponseStatus = HttpStatusCode.OK,
-        HttpStatusCode vehiclePutResonseStatus = HttpStatusCode.OK
+        HttpStatusCode vehiclePutResponseStatus = HttpStatusCode.OK
         ) =>
         httpClient.WithBaseAddress(new("http://localhost:5001"))
             .WithRequest(_clientConnection, HttpMethod.Get)
@@ -27,6 +27,6 @@ internal static class HttpClientMockBuilderExtension
             .WithRequest(_clientConnection, HttpMethod.Put)
             .RespondingStatus(clientPutResponseStatus)
             .WithRequest(_vehicleConnection, HttpMethod.Put)
-            .RespondingStatus(vehiclePutResonseStatus)
+            .RespondingStatus(vehiclePutResponseStatus)
             .Build();
 }
