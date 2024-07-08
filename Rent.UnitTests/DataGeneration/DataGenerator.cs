@@ -9,7 +9,7 @@ internal static class DataGenerator
     public static List<VehicleClientHistoryEntity> GenerateVehicleClientHistoryData(int count) =>
         new Faker<VehicleClientHistoryEntity>()
             .RuleFor(vch => vch.Id, _ => Guid.NewGuid())
-            .RuleFor(vch => vch.StartDate, f => f.Date.Past(refDate: DateTime.UtcNow))
+            .RuleFor(vch => vch.StartDate, f => f.Date.Past(refDate: DateTime.UtcNow - TimeSpan.FromDays(3)))
             .RuleFor(vch => vch.EndDate, f => f.Date.Between(DateTime.UtcNow, DateTime.UtcNow + TimeSpan.FromDays(5)))
             .Generate(count);
 
