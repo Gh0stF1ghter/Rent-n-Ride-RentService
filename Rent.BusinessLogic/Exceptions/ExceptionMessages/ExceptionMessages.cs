@@ -8,7 +8,7 @@ internal static class ExceptionMessages
     public static string InsufficientFunds(Guid userId, decimal userBalance, decimal vehicleCost) =>
         $"User with id:{userId} does not have enough funds on balance. User: {userBalance}, Vehicle: {vehicleCost}";
     public static string NewEndDateLessThanCurrent(DateTime newEndDateTime, DateTime currentEndDateTime) =>
-        $"New end datetime is greater than updated ({newEndDateTime} against {currentEndDateTime})";
+        $"New end datetime is less than updated ({newEndDateTime} against {currentEndDateTime})";
 
     public static string NotFoundInService(string entityType, string? connection) =>
         $"{entityType} was not found while requesting {connection}";
