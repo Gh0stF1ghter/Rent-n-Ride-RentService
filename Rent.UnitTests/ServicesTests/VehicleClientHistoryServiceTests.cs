@@ -2,6 +2,7 @@
 using Mapster;
 using Moq;
 using Newtonsoft.Json;
+using Rent.BusinessLogic.Exceptions;
 using Rent.BusinessLogic.Models;
 using Rent.BusinessLogic.Services.Implementations;
 using Rent.DataAccess.Entities;
@@ -155,6 +156,160 @@ public class VehicleClientHistoryServiceTests
     }
 
     [Theory]
+    [InlineData(9000, 1000, true, false)]
+    [InlineData(9000, 1000, false, true)]
+    [InlineData(1000, 9000, false, false)]
+    public async Task AddAsync_InvalidServiceRequest_ThrowsBadRequestException(
+        decimal userBaseBalance,
+        decimal rentCost,
+        bool isUserRenting,
+        bool isVehicleRented
+        )
+    {
+        //Arrange
+        var correctModel = _vehicleClientHistories[0].Adapt<VehicleClientHistoryModel>();
+
+        var totalRentDays = (correctModel.EndDate - correctModel.StartDate).TotalDays;
+
+        var clientBalance = userBaseBalance * Convert.ToDecimal(totalRentDays);
+
+        var client = DataGenerator.GenerateClientModel(clientBalance, isUserRenting);
+        var vehicle = DataGenerator.GenerateVehicleModel(rentCost, isVehicleRented);
+
+        var httpClient = new HttpClientMockBuilder()
+            .BuildHttpClient(client, vehicle);
+
+        _httpClientFactoryMock
+            .CreateClient(httpClient);
+
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
+
+        //Act
+        var response = async () => await service.AddAsync(correctModel, default);
+
+        //Assert
+        await response.Should().ThrowAsync<BadRequestException>();
+    }
+
+    [Fact]
+    public async Task AddAsync_EndDateTimeGreaterThanStartDateTime_ThrowsBadRequestException()
+    {
+        //Arrange
+        var correctModel = _vehicleClientHistories[0].Adapt<VehicleClientHistoryModel>();
+
+        correctModel.StartDate = DateTime.UtcNow;
+        correctModel.EndDate = DateTime.UtcNow - TimeSpan.FromDays(5);
+
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
+
+        //Act
+        var response = async () => await service.AddAsync(correctModel, default);
+
+        //Assert
+        await response.Should().ThrowAsync<BadRequestException>();
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.OK, HttpStatusCode.NotFound)]
+    [InlineData(HttpStatusCode.NotFound, HttpStatusCode.OK)]
+    public async Task AddAsync_ServiceResponseIsNullOrEmpty_ThrowsNotFoundException(
+        HttpStatusCode clientGetResponseStatusCode,
+        HttpStatusCode vehicleGetResponseStatusCode
+        )
+    {
+        //Arrange
+        var correctModel = _vehicleClientHistories[0].Adapt<VehicleClientHistoryModel>();
+
+        var client = DataGenerator.GenerateClientModel();
+        var vehicle = DataGenerator.GenerateVehicleModel();
+
+        var httpClient = new HttpClientMockBuilder()
+            .BuildHttpClient(
+            client,
+            vehicle,
+            clientGetResponseStatus: clientGetResponseStatusCode,
+            vehicleGetResponseStatus: vehicleGetResponseStatusCode
+            );
+
+        _httpClientFactoryMock
+            .CreateClient(httpClient);
+
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
+
+        //Act
+        var response = async () => await service.AddAsync(correctModel, default);
+
+        //Assert
+        await response.Should().ThrowAsync<NotFoundException>();
+    }
+
+    [Fact]
+    public async Task AddAsync_NullClientModel_ThrowsNotFoundException()
+    {
+        //Arrange
+        var correctModel = _vehicleClientHistories[0].Adapt<VehicleClientHistoryModel>();
+
+        var vehicle = DataGenerator.GenerateVehicleModel();
+
+        var httpClient = new HttpClientMockBuilder()
+            .BuildHttpClient(default, vehicle);
+
+        _httpClientFactoryMock
+            .CreateClient(httpClient);
+
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
+
+        //Act
+        var response = async () => await service.AddAsync(correctModel, default);
+
+        //Assert
+        await response.Should().ThrowAsync<NotFoundException>();
+    }
+
+    [Fact]
+    public async Task AddAsync_NullVehicleModel_ThrowsNotFoundException()
+    {
+        //Arrange
+        var correctModel = _vehicleClientHistories[0].Adapt<VehicleClientHistoryModel>();
+
+        var client = DataGenerator.GenerateClientModel();
+
+        var httpClient = new HttpClientMockBuilder()
+            .BuildHttpClient(client, default);
+
+        _httpClientFactoryMock
+            .CreateClient(httpClient);
+
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
+
+        //Act
+        var response = async () => await service.AddAsync(correctModel, default);
+
+        //Assert
+        await response.Should().ThrowAsync<NotFoundException>();
+    }
+
+    [Theory]
     [InlineData(9000, 1000)]
     [InlineData(9000, 9000)]
     public async Task UpdateAsync_VehicleClientHistoryModel_ReturnsVehicleClientHistoryModel(decimal userBaseBalance, decimal rentCost)
@@ -193,6 +348,30 @@ public class VehicleClientHistoryServiceTests
 
         //Assert
         response.Should().BeEquivalentTo(correctUpdatedModel);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_InvalidEndDateTime_ThrowsBadRequestException()
+    {
+        //Arrange
+        var vehicleClientHistory = DataGenerator.GenerateVehicleClientHistoryData(1)[0];
+        vehicleClientHistory.EndDate = DateTime.UtcNow;
+
+        var correctUpdatedModel = vehicleClientHistory.Adapt<VehicleClientHistoryModel>();
+
+        correctUpdatedModel.EndDate = DateTime.UtcNow - TimeSpan.FromDays(4);
+
+        var service = new VehicleClientHistoryService(_repositoryMock.Object,
+            _distributedCacheMock.Object,
+            _httpClientFactoryMock.Object,
+            _configurationMock.Object
+            );
+
+        //Act
+        var response = async () => await service.UpdateAsync(correctUpdatedModel, default);
+
+        //Assert
+        await response.Should().ThrowAsync<BadRequestException>();
     }
 
     [Fact]

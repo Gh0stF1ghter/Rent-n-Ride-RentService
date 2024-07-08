@@ -12,10 +12,10 @@ internal static class HttpClientMockBuilderExtension
 
     public static HttpClient BuildHttpClient(
         this HttpClientMockBuilder httpClient,
-        ClientModel clientGetResponse,
-        VehicleModel vehicleGetResponse,
+        ClientModel? clientGetResponse,
+        VehicleModel? vehicleGetResponse,
         HttpStatusCode clientGetResponseStatus = HttpStatusCode.OK,
-        HttpStatusCode vehicleGetResonseStatus = HttpStatusCode.OK,
+        HttpStatusCode vehicleGetResponseStatus = HttpStatusCode.OK,
         HttpStatusCode clientPutResponseStatus = HttpStatusCode.OK,
         HttpStatusCode vehiclePutResonseStatus = HttpStatusCode.OK
         ) =>
@@ -23,7 +23,7 @@ internal static class HttpClientMockBuilderExtension
             .WithRequest(_clientConnection, HttpMethod.Get)
             .RespondingJsonContent(clientGetResponse, clientGetResponseStatus)
             .WithRequest(_vehicleConnection, HttpMethod.Get)
-            .RespondingJsonContent(vehicleGetResponse, vehicleGetResonseStatus)
+            .RespondingJsonContent(vehicleGetResponse, vehicleGetResponseStatus)
             .WithRequest(_clientConnection, HttpMethod.Put)
             .RespondingStatus(clientPutResponseStatus)
             .WithRequest(_vehicleConnection, HttpMethod.Put)
