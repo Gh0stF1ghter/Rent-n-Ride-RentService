@@ -12,8 +12,7 @@ namespace Rent.API.Controllers;
 [Route("api/history-of-use")]
 public class VehicleClientHistoryController(IVehicleClientHistoryService service) : ControllerBase
 {
-    [HttpGet]
-    [ActionName("GetAlVehicleClientHistoriesInRange")]
+    [HttpGet(Name = "GetAllVehicleClientHistoriesInRange")]
     public async Task<IEnumerable<VehicleClientHistoryViewModel>> GetAll([FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
         var vehicleClientHistories = await service.GetRangeAsync(page, pageSize, cancellationToken);
@@ -23,8 +22,7 @@ public class VehicleClientHistoryController(IVehicleClientHistoryService service
         return vehicleClientHistoriesVMs;
     }
 
-    [HttpGet("{id}")]
-    [ActionName("GetVehicleClientHistoryById")]
+    [HttpGet("{id}", Name = "GetVehicleClientHistoryById")]
     public async Task<VehicleClientHistoryViewModel> GetById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var vehicleClientHistory = await service.GetByIdAsync(id, cancellationToken);
@@ -34,8 +32,7 @@ public class VehicleClientHistoryController(IVehicleClientHistoryService service
         return vehicleClientHistoryVM;
     }
 
-    [HttpPost]
-    [ActionName("CreateVehicleClientHistory")]
+    [HttpPost(Name = "CreateVehicleClientHistory")]
     public async Task<VehicleClientHistoryViewModel> Create([FromBody] ShortVehicleClientHistoryViewModel createVehicleClientHistoryViewModel, CancellationToken cancellationToken)
     {
         var vehicleClientHistoryModel = createVehicleClientHistoryViewModel.Adapt<VehicleClientHistoryModel>();
@@ -47,8 +44,7 @@ public class VehicleClientHistoryController(IVehicleClientHistoryService service
         return vehicleClientHistoryVM;
     }
 
-    [HttpPut("{id}")]
-    [ActionName("VehicleClientHistoryById")]
+    [HttpPut("{id}", Name = "UpdateVehicleClientHistoryById")]
     public async Task<VehicleClientHistoryViewModel> Update([FromRoute] Guid id, [FromBody] ShortVehicleClientHistoryViewModel updateModelNameViewModel, CancellationToken cancellationToken)
     {
         var vehicleClientHistoryModel = updateModelNameViewModel.Adapt<VehicleClientHistoryModel>();
@@ -62,9 +58,8 @@ public class VehicleClientHistoryController(IVehicleClientHistoryService service
         return vehicleClientHistoryVM;
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id}", Name = "DeleteVehicleClientHistoryById")]
     [Authorize("delete:history-of-use")]
-    [ActionName("DeleteVehicleClientHistoryById")]
     public async Task Delete([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         await service.DeleteAsync(id, cancellationToken);
