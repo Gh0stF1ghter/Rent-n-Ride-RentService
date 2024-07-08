@@ -23,5 +23,5 @@ internal static class ExceptionMessages
         $"Vehicle ({id}) is already rented";
 
     public static string ServiceError(string? connection) =>
-        "Something went wrong during request: " + connection;
+        $"Something went wrong during request: {connection}";
 }
