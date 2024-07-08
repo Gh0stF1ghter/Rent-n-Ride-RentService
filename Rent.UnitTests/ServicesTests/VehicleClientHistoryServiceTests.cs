@@ -180,6 +180,8 @@ public class VehicleClientHistoryServiceTests
         _httpClientFactoryMock
             .CreateClient(httpClient);
 
+        _repositoryMock.GetById(vehicleClientHistory);
+
         var service = new VehicleClientHistoryService(_repositoryMock.Object,
             _distributedCacheMock.Object,
             _httpClientFactoryMock.Object,
