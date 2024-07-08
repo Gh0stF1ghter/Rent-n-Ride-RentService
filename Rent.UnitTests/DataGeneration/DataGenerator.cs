@@ -6,29 +6,24 @@ namespace Rent.UnitTests.DataGeneration;
 
 internal static class DataGenerator
 {
-    public static List<VehicleClientHistoryEntity> AddVehicleClientHistoryData(int count)
-    {
-        var vehicleClientHistoryFaker = GetVehicleClientHistoryFaker();
-
-        return vehicleClientHistoryFaker.Generate(count);
-    }
-
-    public static ClientModel AddClientModel(decimal balance, bool isRented)
-    {
-        var clientFaker = GetClientFaker(balance, isRented);
-
-        return clientFaker.Generate();
-    }
-
-    private static Faker<VehicleClientHistoryEntity> GetVehicleClientHistoryFaker() =>
+    public static List<VehicleClientHistoryEntity> GenerateVehicleClientHistoryData(int count) =>
         new Faker<VehicleClientHistoryEntity>()
             .RuleFor(vch => vch.Id, _ => Guid.NewGuid())
             .RuleFor(vch => vch.StartDate, f => f.Date.Past(refDate: DateTime.UtcNow))
-            .RuleFor(vch => vch.EndDate, f => f.Date.Past(refDate: DateTime.UtcNow));
+            .RuleFor(vch => vch.EndDate, f => f.Date.Between(DateTime.UtcNow, DateTime.UtcNow + TimeSpan.FromDays(5)))
+            .Generate(count);
 
-    private static Faker<ClientModel> GetClientFaker(decimal balance, bool isRented) =>
+    public static ClientModel GenerateClientModel(decimal balance = 0, bool isRenting = false) =>
         new Faker<ClientModel>()
             .RuleFor(c => c.Id, _ => Guid.NewGuid())
             .RuleFor(c => c.Balance, _ => balance)
-            .RuleFor(c => c.IsRenting, _ => isRented);
+            .RuleFor(c => c.IsRenting, _ => isRenting)
+            .Generate();
+
+    public static VehicleModel GenerateVehicleModel(decimal cost = 0, bool isRented = false) =>
+        new Faker<VehicleModel>()
+            .RuleFor(v => v.Id, _ => Guid.NewGuid())
+            .RuleFor(v => v.IsRented, _ => isRented)
+            .RuleFor(v => v.RentCost, _ => cost)
+            .Generate();
 }
