@@ -33,6 +33,11 @@ public class ExceptionHandlingMiddleware(RequestDelegate next)
                 ex.Message
                 ),
 
+            BadRequestException => new ExceptionResponse(
+                (int)HttpStatusCode.BadRequest,
+                ex.Message
+                ),
+            
             _ => new ExceptionResponse(
                 (int)HttpStatusCode.InternalServerError,
                 ex.Message
@@ -44,6 +49,6 @@ public class ExceptionHandlingMiddleware(RequestDelegate next)
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-        await context.Response.WriteAsJsonAsync(response);
+        await context.Response.WriteAsync(response);
     }
 }
