@@ -3,5 +3,7 @@
 public record VehicleClientHistoryViewModel(
     Guid Id,
     DateTime StartDate,
-    DateTime EndDate
+    DateTime EndDate,
+    Guid VehicleId,
+    Guid ClientId
     );
