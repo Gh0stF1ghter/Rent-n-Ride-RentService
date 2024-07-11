@@ -3,8 +3,11 @@ using Rent.DataAccess.Entities;
 
 namespace Rent.DataAccess.Context;
 
-public class AgencyDbContext(DbContextOptions dbContextOptions) : DbContext(dbContextOptions)
+public class AgencyDbContext : DbContext
 {
+    public AgencyDbContext(DbContextOptions dbContextOptions) : base(dbContextOptions) =>
+        Database.Migrate();
+
     public DbSet<VehicleClientHistoryEntity> VehicleClientHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

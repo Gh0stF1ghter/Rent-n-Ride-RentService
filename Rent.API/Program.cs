@@ -1,7 +1,7 @@
 using Rent.API.DI;
 using Rent.API.Extensions;
-using Rent.BusinessLogic.MappingConfigurations;
 using Rent.BusinessLogic.DI;
+using Rent.BusinessLogic.MappingConfigurations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,11 +21,8 @@ var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseAuthentication();
 app.UseAuthorization();
