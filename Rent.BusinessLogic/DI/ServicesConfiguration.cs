@@ -20,6 +20,8 @@ public static class ServicesConfiguration
 
         TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
 
+        services.AddMessageBroker(configuration);
+
         services.AddScoped<IVehicleClientHistoryService, VehicleClientHistoryService>();
     }
 
