@@ -1,4 +1,5 @@
 using Mapster;
+using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rent.BusinessLogic.Services.Implementations;
@@ -21,4 +22,19 @@ public static class ServicesConfiguration
 
         services.AddScoped<IVehicleClientHistoryService, VehicleClientHistoryService>();
     }
+
+    public static void AddMessageBroker(this IServiceCollection services, IConfiguration configuration) =>
+        services.AddMassTransit(cfg =>
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            cfg.AddConsumers(assembly);
+
+            cfg.UsingRabbitMq((context, factoryCfg) =>
+            {
+                factoryCfg.Host(configuration.GetConnectionString("RabbitMQ"), "/");
+
+                factoryCfg.ConfigureEndpoints(context);
+            });
+        });
 }
