@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option csharp_namespace = "RentGrpcService";
+
+message ProtoVehicleClientHistoryModel {
+    string id = 1;
+
+    int64 startDate = 2;
+    int64 endDate = 3;
+
+    string vehicleId = 4;
+    string clientId = 5;
+}
+
+message GrpcStatus {
+    string statusCode = 1;
+    string message = 2;
+}
+
+service RentService {
+    rpc GetVehicleClientHistories (GetVehicleClientHistoriesInRangeRequest) returns (GetVehicleClientHistoriesInRangeResponse);
+    rpc GetVehicleClientHistory (GetVehicleClientHistoryRequest) returns (GetVehicleClientHistoryResponse);
+}
+
+message GetVehicleClientHistoriesInRangeRequest {
+    int32 pageNumber = 1;
+    int32 pageSize = 2;
+}
+
+message GetVehicleClientHistoriesInRangeResponse {
+    repeated ProtoVehicleClientHistoryModel vehicleClientHistory = 1;
+    
+    GrpcStatus status = 2;
+}
+
+message GetVehicleClientHistoryRequest {
+    string id = 1;
+}
+
+message GetVehicleClientHistoryResponse {
+    ProtoVehicleClientHistoryModel vehicleClientHistory = 1;
+
+    GrpcStatus status = 2;
+}
