@@ -5,7 +5,7 @@ using RentGrpcService;
 
 namespace Rent.BusinessLogic.GrpcServices;
 
-public class VehicleClientHistoryGrpcService(IVehicleClientHistoryService service) : RentService.RentServiceBase
+public class VehicleClientHistoryGrpcServiceController(IVehicleClientHistoryService service) : RentService.RentServiceBase
 {
     public override async Task<GetVehicleClientHistoriesInRangeResponse> GetVehicleClientHistories(GetVehicleClientHistoriesInRangeRequest request, ServerCallContext context)
     {
