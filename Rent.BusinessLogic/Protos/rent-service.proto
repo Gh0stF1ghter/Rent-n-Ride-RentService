@@ -28,7 +28,7 @@ message GetVehicleClientHistoriesInRangeRequest {
 }
 
 message GetVehicleClientHistoriesInRangeResponse {
-    repeated ProtoVehicleClientHistoryModel vehicleClientHistory = 1;
+    repeated ProtoVehicleClientHistoryModel vehicleClientHistories = 1;
     
     GrpcStatus status = 2;
 }
