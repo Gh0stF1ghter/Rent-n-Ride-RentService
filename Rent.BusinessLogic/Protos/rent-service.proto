@@ -12,11 +12,6 @@ message ProtoVehicleClientHistoryModel {
     string clientId = 5;
 }
 
-message GrpcStatus {
-    string statusCode = 1;
-    string message = 2;
-}
-
 service RentService {
     rpc GetVehicleClientHistories (GetVehicleClientHistoriesInRangeRequest) returns (GetVehicleClientHistoriesInRangeResponse);
     rpc GetVehicleClientHistory (GetVehicleClientHistoryRequest) returns (GetVehicleClientHistoryResponse);
@@ -30,7 +25,8 @@ message GetVehicleClientHistoriesInRangeRequest {
 message GetVehicleClientHistoriesInRangeResponse {
     repeated ProtoVehicleClientHistoryModel vehicleClientHistories = 1;
     
-    GrpcStatus status = 2;
+    int32 statusCode = 2;
+    string message = 3;
 }
 
 message GetVehicleClientHistoryRequest {
@@ -40,5 +36,6 @@ message GetVehicleClientHistoryRequest {
 message GetVehicleClientHistoryResponse {
     ProtoVehicleClientHistoryModel vehicleClientHistory = 1;
 
-    GrpcStatus status = 2;
+    int32 statusCode = 2;
+    string message = 3;
 }
