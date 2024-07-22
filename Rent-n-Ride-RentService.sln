@@ -7,11 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rent.DataAccess", "Rent.Dat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rent.BusinessLogic", "Rent.BusinessLogic\Rent.BusinessLogic.csproj", "{F6F02A87-7B3F-4F30-A374-DFB6E5649141}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rent.API", "Rent.API\Rent.API.csproj", "{1E1905AB-751C-4C68-9455-6A995018D3DD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rent.API", "Rent.API\Rent.API.csproj", "{1E1905AB-751C-4C68-9455-6A995018D3DD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6438C405-23B7-4D0F-A777-57B8D3E84E72}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rent.UnitTests", "Rent.UnitTests\Rent.UnitTests.csproj", "{499C76DB-94E3-4F6C-A955-0EE793D96DD7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rent.UnitTests", "Rent.UnitTests\Rent.UnitTests.csproj", "{499C76DB-94E3-4F6C-A955-0EE793D96DD7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
