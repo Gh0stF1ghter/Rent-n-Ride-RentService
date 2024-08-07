@@ -11,8 +11,6 @@ var services = builder.Services;
 services.AddApplicationDependencies(builder.Configuration);
 services.AddApiDependencies(builder.Configuration);
 
-GlobalMappingSettings.SetMapper();
-
 services.AddControllers();
 
 services.AddEndpointsApiExplorer();

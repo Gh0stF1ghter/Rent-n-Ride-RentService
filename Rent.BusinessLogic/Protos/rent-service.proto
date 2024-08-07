@@ -2,11 +2,13 @@ syntax = "proto3";
 
 option csharp_namespace = "RentGrpcService";
 
+import "google/protobuf/timestamp.proto";
+
 message ProtoVehicleClientHistoryModel {
     string id = 1;
 
-    int64 startDate = 2;
-    int64 endDate = 3;
+    google.protobuf.Timestamp startDate = 2;
+    google.protobuf.Timestamp endDate = 3;
 
     string vehicleId = 4;
     string clientId = 5;
