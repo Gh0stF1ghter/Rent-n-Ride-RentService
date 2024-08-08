@@ -1,14 +1,20 @@
-﻿using Mapster;
+﻿using Google.Protobuf.WellKnownTypes;
+using Mapster;
+using Rent.BusinessLogic.Models;
+using RentGrpcService;
 using System.Reflection;
 
 namespace Rent.BusinessLogic.MappingConfigurations;
 
-public static class GlobalMappingSettings
+public class GlobalMappingSettings : IRegister
 {
-    public static void SetMapper()
+    public void Register(TypeAdapterConfig config)
     {
-        TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
         TypeAdapterConfig.GlobalSettings.Default.MaxDepth(2);
         TypeAdapterConfig.GlobalSettings.Default.PreserveReference(true);
+
+        config.NewConfig<VehicleClientHistoryModel, ProtoVehicleClientHistoryModel>()
+            .Map(dest => dest.StartDate, src => Timestamp.FromDateTime(src.StartDate))
+            .Map(dest => dest.EndDate, src => Timestamp.FromDateTime(src.EndDate));
     }
 }

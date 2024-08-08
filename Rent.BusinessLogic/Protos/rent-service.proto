@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option csharp_namespace = "RentGrpcService";
+
+import "google/protobuf/timestamp.proto";
+
+message ProtoVehicleClientHistoryModel {
+    string id = 1;
+
+    google.protobuf.Timestamp startDate = 2;
+    google.protobuf.Timestamp endDate = 3;
+
+    string vehicleId = 4;
+    string clientId = 5;
+}
+
+service RentService {
+    rpc GetVehicleClientHistories (GetVehicleClientHistoriesInRangeRequest) returns (GetVehicleClientHistoriesInRangeResponse);
+    rpc GetVehicleClientHistory (GetVehicleClientHistoryRequest) returns (GetVehicleClientHistoryResponse);
+}
+
+message GetVehicleClientHistoriesInRangeRequest {
+    int32 pageNumber = 1;
+    int32 pageSize = 2;
+}
+
+message GetVehicleClientHistoriesInRangeResponse {
+    repeated ProtoVehicleClientHistoryModel vehicleClientHistories = 1;
+    
+    int32 statusCode = 2;
+    string message = 3;
+}
+
+message GetVehicleClientHistoryRequest {
+    string id = 1;
+}
+
+message GetVehicleClientHistoryResponse {
+    ProtoVehicleClientHistoryModel vehicleClientHistory = 1;
+
+    int32 statusCode = 2;
+    string message = 3;
+}
