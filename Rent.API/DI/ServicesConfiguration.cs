@@ -21,12 +21,33 @@ public static class ServicesConfiguration
         services.ConfigureSwagger();
 
         services.AddHttpClient();
+
+        services.ConfigureCors(configuration);
     }
 
     private static void AddAutoValidation(this IServiceCollection services)
     {
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         services.AddFluentValidationAutoValidation();
+    }
+
+    private static void ConfigureCors(this IServiceCollection services, IConfiguration configuration)
+    {
+        var admin = configuration.GetConnectionString("AdminPanelService");
+        var gateway = configuration.GetConnectionString("ApiGateway");
+
+        services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(builder =>
+                builder
+                .WithOrigins(
+                    admin,
+                    gateway
+                    )
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());
+        });
     }
 
     private static void AddAuth0Authentication(this IServiceCollection services, IConfiguration configuration)
