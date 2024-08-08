@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6438C405
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rent.UnitTests", "Rent.UnitTests\Rent.UnitTests.csproj", "{499C76DB-94E3-4F6C-A955-0EE793D96DD7}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventBus", "EventBus\EventBus.csproj", "{F579FBBE-BFF8-4CB7-BD9E-73DDB699E33C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{499C76DB-94E3-4F6C-A955-0EE793D96DD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{499C76DB-94E3-4F6C-A955-0EE793D96DD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{499C76DB-94E3-4F6C-A955-0EE793D96DD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F579FBBE-BFF8-4CB7-BD9E-73DDB699E33C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F579FBBE-BFF8-4CB7-BD9E-73DDB699E33C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F579FBBE-BFF8-4CB7-BD9E-73DDB699E33C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F579FBBE-BFF8-4CB7-BD9E-73DDB699E33C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
